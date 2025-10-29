@@ -1,0 +1,120 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://tsaprecheckbytelos.tsa.dhs.gov/#website",
+      "url": "https://tsaprecheckbytelos.tsa.dhs.gov/",
+      "name": "TSA PreCheck by Telos",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://tsaprecheckbytelos.tsa.dhs.gov/tsa-precheck-locations?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://tsaprecheckbytelos.tsa.dhs.gov/tsa-precheck-locations#webpage",
+      "url": "https://tsaprecheckbytelos.tsa.dhs.gov/tsa-precheck-locations",
+      "isPartOf": { "@id": "https://tsaprecheckbytelos.tsa.dhs.gov/#website" },
+      "name": "TSA PreCheck® Enrollment Locations",
+      "inLanguage": "en",
+      "about": { "@id": "https://tsaprecheckbytelos.tsa.dhs.gov/#service" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://www.telos.com/",
+      "name": "Telos Corporation",
+      "url": "https://www.telos.com/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.telos.com/wp-content/uploads/2021/01/Telos.jpg"
+      },
+      "sameAs": ["https://tsaprecheckbytelos.tsa.dhs.gov/"]
+    },
+    {
+      "@type": "Service",
+      "@id": "https://tsaprecheckbytelos.tsa.dhs.gov/#service",
+      "name": "TSA PreCheck® Enrollment",
+      "serviceType": "Identity verification and enrollment",
+      "areaServed": "US",
+      "provider": { "@id": "https://www.telos.com/" }
+    },
+
+    /* --------- ItemList of Places (repeat each listItem) --------- */
+    {
+      "@type": "ItemList",
+      "@id": "https://tsaprecheckbytelos.tsa.dhs.gov/tsa-precheck-locations#itemlist",
+      "name": "TSA PreCheck® Enrollment Centers",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "url": "{{location_1_url}}",
+          "item": {
+            "@type": "Place",
+            "@id": "https://tsaprecheckbytelos.tsa.dhs.gov/tsa-precheck-locations#loc-{{location_1_id}}",
+            "name": "{{Location 1 Name}}",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "{{123 Main St}}",
+              "addressLocality": "{{City}}",
+              "addressRegion": "{{ST}}",
+              "postalCode": "{{ZIP}}",
+              "addressCountry": "US"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": {{##.######}},
+              "longitude": {{-##.######}}
+            },
+            "telephone": "{{+1-###-###-####}}",
+            "openingHoursSpecification": [
+              {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+                "opens": "{{09:00}}",
+                "closes": "{{17:00}}"
+              }
+              /* Add weekend objects if open */
+            ],
+            "containedInPlace": {
+              "@type": "Place",
+              "name": "{{Office Depot}}"
+            },
+            "hasMap": "{{https://maps.google.com/?q=lat,long}}",
+            "url": "{{location_1_url}}",
+            "amenityFeature": [
+              {
+                "@type": "LocationFeatureSpecification",
+                "name": "Wheelchair accessible",
+                "value": {{true_or_false}}
+              }
+            ]
+          }
+        },
+
+        /* ---- EXAMPLE second item (duplicate the pattern for all centers) ---- */
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "url": "{{location_2_url}}",
+          "item": {
+            "@type": "Place",
+            "@id": "https://tsaprecheckbytelos.tsa.dhs.gov/tsa-precheck-locations#loc-{{location_2_id}}",
+            "name": "{{Location 2 Name}}",
+            "address": { "@type": "PostalAddress", "streetAddress": "{{…}}", "addressLocality": "{{…}}", "addressRegion": "{{…}}", "postalCode": "{{…}}", "addressCountry": "US" },
+            "geo": { "@type": "GeoCoordinates", "latitude": {{##.######}}, "longitude": {{-##.######}} },
+            "telephone": "{{+1-###-###-####}}",
+            "openingHoursSpecification": [{ "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "{{…}}", "closes": "{{…}}" }],
+            "url": "{{location_2_url}}"
+          }
+        }
+
+        /* …continue for all locations … */
+      ]
+    }
+  ]
+}
+</script>
