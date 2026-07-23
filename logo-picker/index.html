@@ -135,12 +135,11 @@
 
   .row {
     display: grid;
-    grid-template-columns: 22px 1fr auto;
+    grid-template-columns: 20px 30px 1fr auto;
     align-items: center;
     gap: 10px;
-    padding: 9px 14px;
+    padding: 8px 14px;
     border-radius: 8px;
-    cursor: pointer;
   }
 
   .row:hover {
@@ -154,12 +153,64 @@
     cursor: pointer;
   }
 
+  .logo-slot {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px dashed #cdc8b8;
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .logo-slot:hover {
+    border-color: var(--accent);
+  }
+
+  .logo-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #fff;
+  }
+
+  .logo-slot .upload-icon {
+    color: #a8a294;
+    width: 14px;
+    height: 14px;
+  }
+
+  .logo-slot .remove-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    font-size: 9px;
+    line-height: 12px;
+    text-align: center;
+    border-radius: 0 0 0 4px;
+    display: none;
+  }
+
+  .logo-slot:hover .remove-btn {
+    display: block;
+  }
+
   .row .name {
-    font-size: 14px;
+    font-size: 13.5px;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: default;
   }
 
   .chips {
@@ -190,8 +241,10 @@
   .right-head {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     margin-bottom: 18px;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
   .right-head h2 {
@@ -201,6 +254,23 @@
     color: var(--muted);
     margin: 0;
     font-weight: 600;
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-label input {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--accent);
+    cursor: pointer;
   }
 
   .empty {
@@ -234,6 +304,18 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.08);
   }
 
+  .tile.has-logo {
+    background: #ffffff;
+    border: 1px solid var(--line);
+    padding: 14px;
+  }
+
+  .tile.has-logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-thumb { background: #ddd8ca; border-radius: 4px; }
 </style>
@@ -243,9 +325,9 @@
 <header>
   <div>
     <h1>Logo Wall Picker</h1>
-    <div class="sub">Check organizations on the left to build the wall on the right.</div>
+    <div class="sub">Check organizations on the left to build the wall on the right. Click the square next to a name to upload its logo.</div>
   </div>
-  <div class="status" id="statusLine">Loading saved selections…</div>
+  <div class="status" id="statusLine">Loading…</div>
 </header>
 
 <div class="layout">
@@ -259,14 +341,20 @@
   <div class="right">
     <div class="right-head">
       <h2 id="wallCount">0 selected</h2>
+      <label class="toggle-label">
+        <input type="checkbox" id="showLogosToggle" checked>
+        Show uploaded logos
+      </label>
     </div>
     <div id="wallArea"></div>
   </div>
 </div>
 
+<input type="file" id="fileInput" accept="image/*" style="display:none">
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAWzFfhUVYnwM0_ITD-SIPzy3Anc18tQbg",
@@ -281,6 +369,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const selectionsRef = ref(db, 'selections');
+const logosRef = ref(db, 'logos');
+const showLogosRef = ref(db, 'settings/showLogos');
 
 const CATEGORY_COLOR = {
   "Nonprofit": "var(--c-nonprofit)",
@@ -345,10 +435,31 @@ const COMPANIES = [
 ];
 
 let checked = {};
+let logos = {};
+let showLogos = true;
+let pendingUploadName = null;
+
+const UPLOAD_ICON_SVG = `<svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`;
 
 function chip(label, secondary) {
   const color = CATEGORY_COLOR[label] || "#999";
   return `<span class="chip${secondary ? ' secondary' : ''}" style="background:${color}">${label}</span>`;
+}
+
+function logoSlotHtml(name) {
+  const safeName = name.replace(/"/g,'&quot;');
+  const logoUrl = logos[name];
+  if (logoUrl) {
+    return `
+      <div class="logo-slot" data-upload="${safeName}" title="Click to replace logo">
+        <img src="${logoUrl}" alt="${safeName} logo">
+        <span class="remove-btn" data-remove="${safeName}" title="Remove logo">×</span>
+      </div>`;
+  }
+  return `
+    <div class="logo-slot" data-upload="${safeName}" title="Click to upload logo">
+      ${UPLOAD_ICON_SVG}
+    </div>`;
 }
 
 function renderList() {
@@ -356,17 +467,31 @@ function renderList() {
   listEl.innerHTML = COMPANIES.map(([name, primary, secondary]) => {
     const isChecked = !!checked[name];
     return `
-      <label class="row">
+      <div class="row">
         <input type="checkbox" data-name="${name.replace(/"/g,'&quot;')}" ${isChecked ? 'checked' : ''}>
+        ${logoSlotHtml(name)}
         <span class="name">${name}</span>
         <span class="chips">${chip(primary, false)}${secondary ? chip(secondary, true) : ''}</span>
-      </label>`;
+      </div>`;
   }).join('');
 
   listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
     cb.addEventListener('change', (e) => {
       const name = e.target.getAttribute('data-name');
       set(ref(db, 'selections/' + name), e.target.checked);
+    });
+  });
+
+  listEl.querySelectorAll('.logo-slot').forEach(slot => {
+    slot.addEventListener('click', (e) => {
+      if (e.target.hasAttribute('data-remove')) {
+        e.stopPropagation();
+        const name = e.target.getAttribute('data-remove');
+        remove(ref(db, 'logos/' + name));
+        return;
+      }
+      pendingUploadName = slot.getAttribute('data-upload');
+      document.getElementById('fileInput').click();
     });
   });
 }
@@ -399,26 +524,93 @@ function renderWall() {
   const wallArea = document.getElementById('wallArea');
 
   if (selected.length === 0) {
-    wallArea.innerHTML = `<div class="empty">No organizations selected yet — check a few names on the left and their placeholder tiles will appear here.</div>`;
+    wallArea.innerHTML = `<div class="empty">No organizations selected yet — check a few names on the left and their tiles will appear here.</div>`;
     return;
   }
 
   wallArea.innerHTML = `<div class="wall">${
-    selected.map(([name, primary]) => `
-      <div class="tile" style="background:${CATEGORY_COLOR[primary] || '#888'}">${name}</div>
-    `).join('')
+    selected.map(([name, primary]) => {
+      const logoUrl = logos[name];
+      if (showLogos && logoUrl) {
+        return `<div class="tile has-logo"><img src="${logoUrl}" alt="${name} logo"></div>`;
+      }
+      return `<div class="tile" style="background:${CATEGORY_COLOR[primary] || '#888'}">${name}</div>`;
+    }).join('')
   }</div>`;
 }
 
+// Resize an uploaded image down to a reasonable max dimension before storing,
+// so the shared database stays small and fast to sync.
+function resizeImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 320;
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round(height * (maxDim / width));
+          width = maxDim;
+        } else {
+          width = Math.round(width * (maxDim / height));
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file || !pendingUploadName) return;
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const resized = await resizeImage(reader.result);
+      set(ref(db, 'logos/' + pendingUploadName), resized);
+    } catch (err) {
+      console.error('Could not process image', err);
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('showLogosToggle').addEventListener('change', (e) => {
+  set(showLogosRef, e.target.checked);
+});
+
 onValue(selectionsRef, (snapshot) => {
   checked = snapshot.val() || {};
-  document.getElementById('statusLine').textContent = 'Live — synced with anyone viewing this page';
   renderList();
   renderTally();
   renderWall();
+  document.getElementById('statusLine').textContent = 'Live — synced with anyone viewing this page';
 }, (error) => {
   document.getElementById('statusLine').textContent = 'Connection error — check console';
   console.error(error);
+});
+
+onValue(logosRef, (snapshot) => {
+  logos = snapshot.val() || {};
+  renderList();
+  renderWall();
+});
+
+onValue(showLogosRef, (snapshot) => {
+  const val = snapshot.val();
+  showLogos = val === null ? true : val;
+  document.getElementById('showLogosToggle').checked = showLogos;
+  renderWall();
 });
 </script>
 
