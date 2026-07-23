@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atmosphere — Logo Wall Picker</title>
+<style>
+  :root {
+    --ink: #1b1d22;
+    --paper: #f7f6f2;
+    --panel: #ffffff;
+    --line: #e4e1d8;
+    --accent: #c65d33;
+    --accent-soft: #f1ddd2;
+    --muted: #75726a;
+
+    --c-nonprofit: #3d6b5c;
+    --c-government: #4a5a7d;
+    --c-tech: #7a4fae;
+    --c-media: #c65d33;
+    --c-agency: #b08a2e;
+    --c-energy: #b23b3b;
+    --c-consumer: #2f7a8c;
+    --c-enterprise: #545454;
+    --c-education: #8a5c2e;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+
+  header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  header h1 {
+    font-size: 21px;
+    letter-spacing: 0.01em;
+    margin: 0;
+    font-weight: 650;
+  }
+
+  header .sub {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .status {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(340px, 460px) 1fr;
+    gap: 0;
+    min-height: calc(100vh - 78px);
+  }
+
+  .left {
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .tally {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  .tally h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--muted);
+    margin: 0 0 12px;
+    font-weight: 600;
+  }
+
+  .tally-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 18px;
+  }
+
+  .tally-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .swatch {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .tally-name {
+    flex: 1;
+    color: var(--ink);
+  }
+
+  .tally-count {
+    font-variant-numeric: tabular-nums;
+    font-weight: 650;
+    min-width: 18px;
+    text-align: right;
+    color: var(--muted);
+  }
+
+  .tally-count.active {
+    color: var(--ink);
+  }
+
+  .list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 6px 8px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .row:hover {
+    background: #efece3;
+  }
+
+  .row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .row .name {
+    font-size: 14px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chips {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .chip {
+    font-size: 10.5px;
+    padding: 2px 7px;
+    border-radius: 100px;
+    color: #fff;
+    white-space: nowrap;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .chip.secondary {
+    opacity: 0.62;
+  }
+
+  .right {
+    padding: 24px 28px 60px;
+    overflow-y: auto;
+  }
+
+  .right-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 18px;
+  }
+
+  .right-head h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .empty {
+    color: var(--muted);
+    font-size: 14px;
+    padding: 60px 10px;
+    text-align: center;
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+  }
+
+  .wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+  }
+
+  .tile {
+    aspect-ratio: 3 / 2;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 650;
+    color: #fff;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: #ddd8ca; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Logo Wall Picker</h1>
+    <div class="sub">Check organizations on the left to build the wall on the right.</div>
+  </div>
+  <div class="status" id="statusLine">Loading saved selections…</div>
+</header>
+
+<div class="layout">
+  <div class="left">
+    <div class="tally">
+      <h2>Industry Tally</h2>
+      <div class="tally-grid" id="tallyGrid"></div>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+  <div class="right">
+    <div class="right-head">
+      <h2 id="wallCount">0 selected</h2>
+    </div>
+    <div id="wallArea"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAWzFfhUVYnwM0_ITD-SIPzy3Anc18tQbg",
+  authDomain: "logo-picker.firebaseapp.com",
+  databaseURL: "https://logo-picker-default-rtdb.firebaseio.com",
+  projectId: "logo-picker",
+  storageBucket: "logo-picker.firebasestorage.app",
+  messagingSenderId: "662398118855",
+  appId: "1:662398118855:web:0cfccd9d9607bf9dd5c7e2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const selectionsRef = ref(db, 'selections');
+
+const CATEGORY_COLOR = {
+  "Nonprofit": "var(--c-nonprofit)",
+  "Government": "var(--c-government)",
+  "Tech": "var(--c-tech)",
+  "Media": "var(--c-media)",
+  "Agency": "var(--c-agency)",
+  "Energy": "var(--c-energy)",
+  "Consumer": "var(--c-consumer)",
+  "Enterprise": "var(--c-enterprise)",
+  "Education": "var(--c-education)"
+};
+
+const CATEGORIES = Object.keys(CATEGORY_COLOR);
+
+const COMPANIES = [
+  ["AARP", "Nonprofit", ""],
+  ["AOL", "Media", ""],
+  ["American Chemical Society", "Nonprofit", ""],
+  ["American University", "Education", ""],
+  ["BAHFSA (The Government of the Bahamas)", "Government", ""],
+  ["Benjamin Moore Paint", "Enterprise", ""],
+  ["Booz Allen", "Enterprise", "Government"],
+  ["Choice Hotels (Cambria Suites)", "Enterprise", ""],
+  ["CFA Society", "Nonprofit", ""],
+  ["CQ Roll Call", "Media", "Government"],
+  ["Datassentials", "Tech", ""],
+  ["Deltek", "Tech", "Government"],
+  ["US Department of Defense", "Government", ""],
+  ["US Department of Energy", "Government", ""],
+  ["DryyDC", "Consumer", ""],
+  ["EDM Association", "Nonprofit", ""],
+  ["First American", "Enterprise", ""],
+  ["FSBPT", "Nonprofit", "Government"],
+  ["Grand Bahama Port Authority", "Government", ""],
+  ["HealthTrust", "Enterprise", ""],
+  ["US Department of Health and Human Services", "Government", ""],
+  ["International Medical Corps", "Nonprofit", ""],
+  ["Joe Gibbs Racing", "Enterprise", ""],
+  ["KCBI", "Media", "Nonprofit"],
+  ["The Kennedy Center", "Nonprofit", "Government"],
+  ["Georgetown University", "Education", ""],
+  ["Maersk", "Enterprise", ""],
+  ["NUBOXX", "Consumer", ""],
+  ["Palantir", "Tech", "Government"],
+  ["Payless Power", "Energy", ""],
+  ["PBS", "Media", "Government"],
+  ["Pinkston", "Agency", "Government"],
+  ["Prison Fellowship International", "Nonprofit", ""],
+  ["Saving Homes", "Nonprofit", ""],
+  ["Scholastic", "Media", ""],
+  ["Seastreak", "Consumer", ""],
+  ["Semarchy", "Tech", ""],
+  ["Software AG", "Tech", ""],
+  ["Telos", "Tech", "Government"],
+  ["Transportation and Security Agency (TSA)", "Government", ""],
+  ["USAID", "Government", ""],
+  ["USDA Forest Services", "Government", ""],
+  ["YoungLife", "Nonprofit", ""],
+  ["YouVersion", "Nonprofit", ""],
+  ["YWCA", "Nonprofit", ""]
+];
+
+let checked = {};
+
+function chip(label, secondary) {
+  const color = CATEGORY_COLOR[label] || "#999";
+  return `<span class="chip${secondary ? ' secondary' : ''}" style="background:${color}">${label}</span>`;
+}
+
+function renderList() {
+  const listEl = document.getElementById('list');
+  listEl.innerHTML = COMPANIES.map(([name, primary, secondary]) => {
+    const isChecked = !!checked[name];
+    return `
+      <label class="row">
+        <input type="checkbox" data-name="${name.replace(/"/g,'&quot;')}" ${isChecked ? 'checked' : ''}>
+        <span class="name">${name}</span>
+        <span class="chips">${chip(primary, false)}${secondary ? chip(secondary, true) : ''}</span>
+      </label>`;
+  }).join('');
+
+  listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const name = e.target.getAttribute('data-name');
+      set(ref(db, 'selections/' + name), e.target.checked);
+    });
+  });
+}
+
+function renderTally() {
+  const counts = {};
+  CATEGORIES.forEach(c => counts[c] = 0);
+
+  COMPANIES.forEach(([name, primary, secondary]) => {
+    if (!checked[name]) return;
+    if (primary) counts[primary] = (counts[primary] || 0) + 1;
+    if (secondary) counts[secondary] = (counts[secondary] || 0) + 1;
+  });
+
+  const grid = document.getElementById('tallyGrid');
+  grid.innerHTML = CATEGORIES.map(cat => {
+    const n = counts[cat] || 0;
+    return `
+      <div class="tally-row">
+        <span class="swatch" style="background:${CATEGORY_COLOR[cat]}"></span>
+        <span class="tally-name">${cat}</span>
+        <span class="tally-count ${n > 0 ? 'active' : ''}">${n}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderWall() {
+  const selected = COMPANIES.filter(([name]) => checked[name]);
+  document.getElementById('wallCount').textContent = `${selected.length} selected`;
+  const wallArea = document.getElementById('wallArea');
+
+  if (selected.length === 0) {
+    wallArea.innerHTML = `<div class="empty">No organizations selected yet — check a few names on the left and their placeholder tiles will appear here.</div>`;
+    return;
+  }
+
+  wallArea.innerHTML = `<div class="wall">${
+    selected.map(([name, primary]) => `
+      <div class="tile" style="background:${CATEGORY_COLOR[primary] || '#888'}">${name}</div>
+    `).join('')
+  }</div>`;
+}
+
+onValue(selectionsRef, (snapshot) => {
+  checked = snapshot.val() || {};
+  document.getElementById('statusLine').textContent = 'Live — synced with anyone viewing this page';
+  renderList();
+  renderTally();
+  renderWall();
+}, (error) => {
+  document.getElementById('statusLine').textContent = 'Connection error — check console';
+  console.error(error);
+});
+</script>
+
+</body>
+</html>
