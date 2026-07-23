@@ -138,6 +138,58 @@
     color: var(--ink);
   }
 
+  .filter-bar {
+    flex: 0 0 auto;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-bar select {
+    flex: 1;
+    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .filter-bar .clear-filter {
+    font-size: 12px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .filter-bar .clear-filter:hover {
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+
+  .filter-bar .clear-filter:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .list-empty {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 30px 14px;
+    text-align: center;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    margin: 12px;
+  }
+
   .list {
     overflow-y: auto;
     flex: 1 1 auto;
@@ -356,6 +408,12 @@
       <h2>Industry Tally</h2>
       <div class="tally-grid" id="tallyGrid"></div>
     </div>
+    <div class="filter-bar">
+      <select id="categoryFilter">
+        <option value="all">All industries</option>
+      </select>
+      <button class="clear-filter" id="clearFilterBtn" disabled>Clear</button>
+    </div>
     <div class="list" id="list"></div>
   </div>
   <div class="right">
@@ -460,6 +518,30 @@ let checked = {};
 let logos = {};
 let showLogos = true;
 let pendingUploadName = null;
+let activeFilter = null;
+
+const filterSelect = document.getElementById('categoryFilter');
+const clearFilterBtn = document.getElementById('clearFilterBtn');
+
+CATEGORIES.forEach(cat => {
+  const opt = document.createElement('option');
+  opt.value = cat;
+  opt.textContent = cat;
+  filterSelect.appendChild(opt);
+});
+
+filterSelect.addEventListener('change', () => {
+  activeFilter = filterSelect.value === 'all' ? null : filterSelect.value;
+  clearFilterBtn.disabled = !activeFilter;
+  renderList();
+});
+
+clearFilterBtn.addEventListener('click', () => {
+  activeFilter = null;
+  filterSelect.value = 'all';
+  clearFilterBtn.disabled = true;
+  renderList();
+});
 
 const UPLOAD_ICON_SVG = `<svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`;
 
@@ -486,7 +568,17 @@ function logoSlotHtml(name) {
 
 function renderList() {
   const listEl = document.getElementById('list');
-  listEl.innerHTML = COMPANIES.map(([name, primary, secondary]) => {
+  const visible = COMPANIES.filter(([name, primary, secondary]) => {
+    if (!activeFilter) return true;
+    return primary === activeFilter || secondary === activeFilter;
+  });
+
+  if (visible.length === 0) {
+    listEl.innerHTML = `<div class="list-empty">No organizations match this filter.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = visible.map(([name, primary, secondary]) => {
     const isChecked = !!checked[name];
     return `
       <div class="row">
