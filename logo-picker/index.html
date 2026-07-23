@@ -273,12 +273,19 @@
     cursor: pointer;
   }
 
+  .preview-window {
+    background: #343757;
+    border-radius: 14px;
+    padding: 20px;
+    min-height: calc(100vh - 220px);
+  }
+
   .empty {
-    color: var(--muted);
+    color: #b7b9d1;
     font-size: 14px;
     padding: 60px 10px;
     text-align: center;
-    border: 1px dashed var(--line);
+    border: 1px dashed rgba(255,255,255,0.22);
     border-radius: 12px;
   }
 
@@ -346,7 +353,9 @@
         Show uploaded logos
       </label>
     </div>
-    <div id="wallArea"></div>
+    <div class="preview-window">
+      <div id="wallArea"></div>
+    </div>
   </div>
 </div>
 
@@ -576,6 +585,11 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
   const reader = new FileReader();
   reader.onload = async () => {
     try {
+      if (file.type === 'image/svg+xml') {
+        // SVGs are vector — store as-is, no rasterizing/resizing needed.
+        set(ref(db, 'logos/' + pendingUploadName), reader.result);
+        return;
+      }
       const resized = await resizeImage(reader.result);
       set(ref(db, 'logos/' + pendingUploadName), resized);
     } catch (err) {
